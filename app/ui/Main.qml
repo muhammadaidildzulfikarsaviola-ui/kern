@@ -1,55 +1,35 @@
 import QtQuick
 import QtQuick.Window
-import QtQuick.Controls as QQC
+import QtQuick.Controls
 import "components"
 
 Window {
     id: mainWindow
 
     visible: true
+    width: 460
+    height: capsule.expanded ? 410 : 104
 
-    flags: Qt.FramelessWindowHint
-           | Qt.WindowStaysOnTopHint
-           | Qt.Tool
-
+    flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
     color: "transparent"
 
-    width: capsule.windowWidth
-    height: capsule.windowHeight
-
-    Behavior on width {
-        NumberAnimation {
-            duration: 300
-            easing.type: Easing.OutCubic
-        }
-    }
+    property int currentPage: 0
 
     Behavior on height {
         NumberAnimation {
-            duration: 300
+            duration: 280
             easing.type: Easing.OutCubic
         }
     }
 
     Component.onCompleted: {
-        mainWindow.x = Math.round((Screen.width - mainWindow.width) / 2)
-        mainWindow.y = 20
-    }
-
-    Connections {
-        target: capsule
-
-        function onExpandedChanged() {
-            var centerX = mainWindow.x + mainWindow.width / 2
-            var newWidth = capsule.expanded ? capsule.expandedWidth : capsule.compactWidth
-            mainWindow.x = Math.round(centerX - newWidth / 2)
-        }
+        x = Math.round((Screen.width - width) / 2)
+        y = 24
     }
 
     Shortcut {
         sequence: "Escape"
         context: Qt.WindowShortcut
-
         onActivated: {
             if (currentPage !== 0) {
                 currentPage = 0
@@ -62,125 +42,110 @@ Window {
     Shortcut {
         sequence: "Ctrl+Q"
         context: Qt.WindowShortcut
-
-        onActivated: {
-            Qt.quit()
-        }
+        onActivated: Qt.quit()
     }
 
     Capsule {
         id: capsule
-
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-
+        width: parent.width
+        expanded: false
         targetWindow: mainWindow
     }
 
-    // Navigation bar - compact view when collapsed
     Rectangle {
         id: navBar
+        width: capsule.expanded ? 420 : 190
+        height: 40
         anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: capsule.expanded ? 0 : 44
-        color: "#171717"
-        radius: 12
+        anchors.topMargin: 56
+        anchors.horizontalCenter: parent.horizontalCenter
+        radius: 20
+        color: "#202020"
+        border.color: "#303030"
+        border.width: 1
         clip: true
-        visible: !capsule.expanded
+
+        Behavior on width {
+            NumberAnimation {
+                duration: 220
+                easing.type: Easing.OutCubic
+            }
+        }
 
         Row {
-            anchors.fill: parent
-            anchors.leftMargin: 20
-            anchors.rightMargin: 20
+            anchors.centerIn: parent
             spacing: 8
 
-            Rectangle {
-                id: homeBtn
-                width: 36
-                height: 36
-                radius: 18
-                color: currentPage === 0 ? "#F59E0B" : "#3F3F3F"
+            Repeater {
+                model: ["HOME", "MEDIA", "SYSTEM", "TOOLS"]
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "1"
-                    color: currentPage === 0 ? "#171717" : "#FFFFFF"
-                    font.pixelSize: 12
-                    font.bold: currentPage === 0
-                }
-            }
+                delegate: Rectangle {
+                    required property int index
+                    required property string modelData
 
-            Rectangle {
-                id: mediaBtn
-                width: 36
-                height: 36
-                radius: 18
-                color: currentPage === 1 ? "#F59E0B" : "#3F3F3F"
-                
+                    width: capsule.expanded ? 92 : 36
+                    height: 32
+                    radius: 16
+                    color: mainWindow.currentPage === index ? "#F59E0B" : "#3A3A3A"
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "2"
-                    color: currentPage === 1 ? "#171717" : "#FFFFFF"
-                    font.pixelSize: 12
-                    font.bold: currentPage === 1
-                }
-            }
+                    Behavior on width {
+                        NumberAnimation { duration: 180 }
+                    }
 
-            Rectangle {
-                id: systemBtn
-                width: 36
-                height: 36
-                radius: 18
-                color: currentPage === 2 ? "#F59E0B" : "#3F3F3F"
-                
+                    Text {
+                        anchors.centerIn: parent
+                        text: capsule.expanded ? modelData : String(index + 1)
+                        color: mainWindow.currentPage === index ? "#171717" : "#FFFFFF"
+                        font.pixelSize: capsule.expanded ? 9 : 12
+                        font.bold: mainWindow.currentPage === index
+                    }
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "3"
-                    color: currentPage === 2 ? "#171717" : "#FFFFFF"
-                    font.pixelSize: 12
-                    font.bold: currentPage === 2
-                }
-            }
-
-            Rectangle {
-                id: toolsBtn
-                width: 36
-                height: 36
-                radius: 18
-                color: currentPage === 3 ? "#F59E0B" : "#3F3F3F"
-                
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "4"
-                    color: currentPage === 3 ? "#171717" : "#FFFFFF"
-                    font.pixelSize: 12
-                    font.bold: currentPage === 3
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: mainWindow.currentPage = index
+                        cursorShape: Qt.PointingHandCursor
+                    }
                 }
             }
         }
     }
 
-    // Main content area with page loader
     Loader {
         id: pageLoader
-        anchors.fill: parent
-        anchors.topMargin: capsule.compactHeight
+        anchors.top: navBar.bottom
+        anchors.topMargin: 12
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: 20
+        anchors.rightMargin: 20
+        anchors.bottomMargin: 12
+        visible: capsule.expanded
+        active: capsule.expanded
 
-        source: currentPage === 0 ? "HomePage.qml" :
-                currentPage === 1 ? "MediaPage.qml" :
-                currentPage === 2 ? "SystemPage.qml" : "ToolsPage.qml"
+        source: {
+            switch (mainWindow.currentPage) {
+            case 1: return "MediaPage.qml"
+            case 2: return "SystemPage.qml"
+            case 3: return "ToolsPage.qml"
+            default: return "HomePage.qml"
+            }
+        }
+
+        onLoaded: {
+            if (!item)
+                return
+
+            if (item.hasOwnProperty("systemService"))
+                item.systemService = systemService
+
+            if (item.hasOwnProperty("mediaController"))
+                item.mediaController = mediaController
+
+            if (item.hasOwnProperty("onBackPressed"))
+                item.onBackPressed = function() { mainWindow.currentPage = 0 }
+        }
     }
-
-    // Navigation function
-    function navigateTo(pageId) {
-        currentPage = pageId
-    }
-
-    property int currentPage: 0
-    property int compactHeight: 56
-    property int expandedHeight: (typeof mediaController !== "undefined" && mediaController && mediaController.hasSession) ? 312 : 220
 }
