@@ -31,11 +31,10 @@ Window {
         sequence: "Escape"
         context: Qt.WindowShortcut
         onActivated: {
-            if (currentPage !== 0) {
+            if (currentPage !== 0)
                 currentPage = 0
-            } else {
+            else
                 capsule.expanded = false
-            }
         }
     }
 
@@ -138,14 +137,22 @@ Window {
             if (!item)
                 return
 
-            if (item.hasOwnProperty("systemService"))
+            if (mainWindow.currentPage === 0) {
                 item.systemService = systemService
-
-            if (item.hasOwnProperty("mediaController"))
                 item.mediaController = mediaController
+            } else if (mainWindow.currentPage === 1) {
+                item.mediaController = mediaController
+            } else if (mainWindow.currentPage === 2) {
+                item.systemService = systemService
+            }
+        }
+    }
 
-            if (item.hasOwnProperty("onBackPressed"))
-                item.onBackPressed = function() { mainWindow.currentPage = 0 }
+    Connections {
+        target: pageLoader.item
+
+        function onBackRequested() {
+            mainWindow.currentPage = 0
         }
     }
 }
