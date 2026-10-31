@@ -8,15 +8,18 @@ Window {
     id: mainWindow
 
     visible: true
-    width: capsule.expanded ? 560 : 190
-    height: capsule.expanded ? 176 : 40
+    width: capsule.expanded ? 620 : 190
+    height: capsule.expanded ? 270 : 40
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
     color: "transparent"
 
-    property int currentPage: 0
+    property string activeTool: "home"
 
     onWidthChanged: x = Math.round((Screen.width - width) / 2)
 
+    Behavior on width {
+        NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
+    }
     Behavior on height {
         NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
     }
@@ -29,7 +32,12 @@ Window {
     Shortcut {
         sequence: "Escape"
         context: Qt.WindowShortcut
-        onActivated: capsule.expanded = false
+        onActivated: {
+            if (mainWindow.activeTool !== "home")
+                mainWindow.activeTool = "home"
+            else
+                capsule.expanded = false
+        }
     }
 
     Shortcut {
@@ -50,164 +58,305 @@ Window {
     Rectangle {
         id: expandedPanel
         anchors.fill: parent
-        radius: 30
+        radius: 28
         color: "#050505"
         visible: capsule.expanded
         opacity: capsule.expanded ? 1 : 0
         clip: true
 
-        ColumnLayout {
+        RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: 18
-            anchors.rightMargin: 18
-            anchors.topMargin: 9
-            anchors.bottomMargin: 8
-            spacing: 3
+            anchors.margins: 14
+            spacing: 14
 
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 24
-                spacing: 8
+            // Launcher grid on the left.
+            GridLayout {
+                id: launcher
+                Layout.preferredWidth: 174
+                Layout.fillHeight: true
+                columns: 3
+                rows: 2
+                columnSpacing: 8
+                rowSpacing: 8
 
-                Rectangle {
-                    width: 22
-                    height: 22
-                    radius: 11
-                    color: "#00E676"
+                Repeater {
+                    model: [
+                        { key: "pomodoro", glyph: "◷", label: "Focus" },
+                        { key: "clipboard", glyph: "▤", label: "Clip" },
+                        { key: "controls", glyph: "⌘", label: "Control" },
+                        { key: "audio", glyph: "♫", label: "Audio" },
+                        { key: "system", glyph: "▥", label: "System" },
+                        { key: "settings", glyph: "⚙", label: "Settings" }
+                    ]
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: "ϟ"
-                        color: "#07130B"
-                        font.pixelSize: 16
-                        font.bold: true
+                    delegate: Item {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.minimumWidth: 0
+                        Layout.minimumHeight: 0
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 13
+                            color: mainWindow.activeTool === modelData.key ? "#3A2817" : "#1C1C1C"
+                            border.width: mainWindow.activeTool === modelData.key ? 1 : 0
+                            border.color: "#F59E0B"
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 4
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: modelData.glyph
+                                    color: mainWindow.activeTool === modelData.key ? "#F59E0B" : "#F2F2F2"
+                                    font.pixelSize: 23
+                                }
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: modelData.label
+                                    color: "#AFAFAF"
+                                    font.pixelSize: 8
+                                }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: mainWindow.activeTool = modelData.key
+                            }
+                        }
                     }
-                }
-
-                Text {
-                    text: Qt.formatDateTime(new Date(), "ddd dd MMM yyyy")
-                    color: "#E6E6E6"
-                    font.pixelSize: 13
-                }
-
-                Text {
-                    id: expandedClock
-                    text: Qt.formatDateTime(new Date(), "hh:mm")
-                    color: "#FFFFFF"
-                    font.pixelSize: 13
-                    font.bold: true
-                }
-
-                Item { Layout.fillWidth: true }
-
-                Text {
-                    text: "▮▮▮"
-                    color: "#FFFFFF"
-                    font.pixelSize: 12
-                    font.bold: true
                 }
             }
 
-            SwipeView {
-                id: pages
+            Rectangle {
+                Layout.fillHeight: true
+                Layout.preferredWidth: 1
+                color: "#292929"
+            }
+
+            // Right side: persistent RAM and media widgets, or selected tool.
+            Item {
+                id: contentArea
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                currentIndex: mainWindow.currentPage
-                interactive: true
-                clip: true
 
-                onCurrentIndexChanged: mainWindow.currentPage = currentIndex
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 9
+                    visible: mainWindow.activeTool === "home"
 
-                MediaPage {
-                    mediaController: mediaController
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 66
+                        radius: 13
+                        color: "#191919"
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 14
+                            anchors.rightMargin: 14
+                            spacing: 8
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 2
+                                Text {
+                                    text: "RAM"
+                                    color: "#929292"
+                                    font.pixelSize: 10
+                                    font.letterSpacing: 1
+                                }
+                                Text {
+                                    text: Math.round(systemService ? systemService.memoryPercent : 0) + "%"
+                                    color: "#FFFFFF"
+                                    font.pixelSize: 27
+                                    font.bold: true
+                                }
+                            }
+
+                            Text {
+                                text: "MEMORY"
+                                color: "#666666"
+                                font.pixelSize: 9
+                                font.letterSpacing: 1
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        radius: 13
+                        color: "#191919"
+                        clip: true
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 11
+                            spacing: 11
+
+                            Rectangle {
+                                Layout.preferredWidth: 62
+                                Layout.preferredHeight: 62
+                                radius: 10
+                                color: "#303030"
+                                clip: true
+
+                                Image {
+                                    anchors.fill: parent
+                                    source: mediaController && mediaController.hasArtwork ? mediaController.artwork : ""
+                                    fillMode: Image.PreserveAspectCrop
+                                    visible: mediaController && mediaController.hasArtwork
+                                }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "♫"
+                                    color: "#BBBBBB"
+                                    font.pixelSize: 29
+                                    visible: !(mediaController && mediaController.hasArtwork)
+                                }
+                            }
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                spacing: 3
+
+                                Text {
+                                    text: "NOW PLAYING"
+                                    color: "#F59E0B"
+                                    font.pixelSize: 8
+                                    font.letterSpacing: 1
+                                }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: mediaController && mediaController.title !== "" ? mediaController.title : "Nothing playing"
+                                    color: "#FFFFFF"
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    elide: Text.ElideRight
+                                }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: mediaController && mediaController.artist !== "" ? mediaController.artist : "Start playing music"
+                                    color: "#929292"
+                                    font.pixelSize: 10
+                                    elide: Text.ElideRight
+                                }
+
+                                Item { Layout.fillHeight: true }
+
+                                RowLayout {
+                                    Layout.alignment: Qt.AlignRight
+                                    spacing: 15
+
+                                    Text {
+                                        text: "◀◀"
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 13
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            anchors.margins: -6
+                                            enabled: !!mediaController
+                                            onClicked: mediaController.previous()
+                                        }
+                                    }
+
+                                    Text {
+                                        text: mediaController && mediaController.isPlaying ? "Ⅱ" : "▶"
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 17
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            anchors.margins: -6
+                                            enabled: !!mediaController
+                                            onClicked: mediaController.playPause()
+                                        }
+                                    }
+
+                                    Text {
+                                        text: "▶▶"
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 13
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            anchors.margins: -6
+                                            enabled: !!mediaController
+                                            onClicked: mediaController.next()
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
-                PomodoroPage {}
-
-                HomePage {
-                    systemService: systemService
-                    mediaController: mediaController
-                }
-
-                SystemPage {
-                    systemService: systemService
-                }
-
-                ToolsPage {}
-            }
-        }
-
-        Timer {
-            interval: 1000
-            running: capsule.expanded
-            repeat: true
-            onTriggered: expandedClock.text = Qt.formatDateTime(new Date(), "hh:mm")
-        }
-
-        Rectangle {
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: 16
-            width: 22
-            height: 22
-            radius: 11
-            color: "#454545"
-            Text { anchors.centerIn: parent; text: "‹"; color: "white"; font.pixelSize: 22 }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: pages.decrementCurrentIndex()
-                cursorShape: Qt.PointingHandCursor
-            }
-        }
-
-        Rectangle {
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.rightMargin: 16
-            width: 22
-            height: 22
-            radius: 11
-            color: "#454545"
-            Text { anchors.centerIn: parent; text: "›"; color: "white"; font.pixelSize: 22 }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: pages.incrementCurrentIndex()
-                cursorShape: Qt.PointingHandCursor
-            }
-        }
-
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 7
-            spacing: 6
-
-            Repeater {
-                model: 5
-                delegate: Rectangle {
-                    required property int index
-                    width: mainWindow.currentPage === index ? 18 : 5
-                    height: 4
-                    radius: 2
-                    color: mainWindow.currentPage === index ? "#FFFFFF" : "#666666"
-                    Behavior on width { NumberAnimation { duration: 140 } }
-                    MouseArea {
-                        anchors.fill: parent
-                        anchors.margins: -5
-                        onClicked: mainWindow.currentPage = index
+                Loader {
+                    anchors.fill: parent
+                    active: mainWindow.activeTool !== "home"
+                    visible: active
+                    sourceComponent: {
+                        switch (mainWindow.activeTool) {
+                        case "pomodoro": return pomodoroComponent
+                        case "clipboard": return placeholderComponent
+                        case "controls": return placeholderComponent
+                        case "audio": return placeholderComponent
+                        case "system": return systemComponent
+                        case "settings": return placeholderComponent
+                        default: return placeholderComponent
+                        }
                     }
                 }
             }
         }
+    }
 
-        MouseArea {
+    Component {
+        id: pomodoroComponent
+        PomodoroPage {
             anchors.fill: parent
-            z: -1
-            onWheel: function(wheel) {
-                if (wheel.angleDelta.y < 0)
-                    pages.incrementCurrentIndex()
-                else if (wheel.angleDelta.y > 0)
-                    pages.decrementCurrentIndex()
+        }
+    }
+
+    Component {
+        id: systemComponent
+        SystemPage {
+            anchors.fill: parent
+            systemService: systemService
+        }
+    }
+
+    Component {
+        id: placeholderComponent
+        Rectangle {
+            radius: 14
+            color: "#191919"
+            Column {
+                anchors.centerIn: parent
+                spacing: 7
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: mainWindow.activeTool === "clipboard" ? "CLIPBOARD" :
+                          mainWindow.activeTool === "controls" ? "QUICK CONTROLS" :
+                          mainWindow.activeTool === "audio" ? "AUDIO TOOLS" : "SETTINGS"
+                    color: "#F59E0B"
+                    font.pixelSize: 11
+                    font.bold: true
+                    font.letterSpacing: 1
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "This module is not implemented yet."
+                    color: "#888888"
+                    font.pixelSize: 10
+                }
             }
         }
     }
