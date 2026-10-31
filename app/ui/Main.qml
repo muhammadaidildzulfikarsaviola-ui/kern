@@ -8,14 +8,14 @@ Window {
     id: mainWindow
 
     visible: true
-    width: 560
+    width: capsule.expanded ? 560 : 190
     height: capsule.expanded ? 176 : 40
-    minimumWidth: 560
-    maximumWidth: 560
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
     color: "transparent"
 
     property int currentPage: 0
+
+    onWidthChanged: x = Math.round((Screen.width - width) / 2)
 
     Behavior on height {
         NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
