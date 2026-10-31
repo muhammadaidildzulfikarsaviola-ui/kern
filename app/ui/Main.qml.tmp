@@ -1,0 +1,587 @@
+import QtQuick
+import QtQuick.Window
+import QtQuick.Controls as QQC
+import "components"
+
+Window {
+    id: mainWindow
+
+    visible: true
+
+    flags: Qt.FramelessWindowHint
+           | Qt.WindowStaysOnTopHint
+           | Qt.Tool
+
+    color: "transparent"
+
+    width: capsule.windowWidth
+    height: capsule.windowHeight
+
+    Behavior on width {
+        NumberAnimation {
+            id: widthAnimation
+            duration: 300
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    Behavior on height {
+        NumberAnimation {
+            duration: 300
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    Component.onCompleted: {
+        mainWindow.x = Math.round((Screen.width - mainWindow.width) / 2)
+        mainWindow.y = 20
+    }
+
+    property int currentPage: 0
+    property int compactHeight: 56
+    property int expandedHeight: (typeof mediaController !== "undefined" && mediaController && mediaController.hasSession) ? 312 : 220
+
+    // Page component definitions
+    Component {
+        id: homePage
+        Item {
+            anchors.fill: parent
+
+            Row {
+                anchors.fill: parent
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                spacing: 14
+
+                Rectangle {
+                    id: systemMonitorArea
+                    width: parent.height - 24
+                    height: parent.height - 24
+                    radius: 12
+                    color: "#222222"
+                    clip: true
+
+                    Column {
+                        anchors.fill: parent
+                        anchors.leftMargin: 8
+                        anchors.rightMargin: 8
+                        anchors.topMargin: 8
+                        anchors.bottomMargin: 8
+                        spacing: 6
+
+                        Text {
+                            text: "CPU"
+                            color: "#888888"
+                            font.pixelSize: 9
+                            font.letterSpacing: 0.5
+                        }
+
+                        Rectangle {
+                            id: cpuTrack
+                            height: 6
+                            radius: 3
+                            color: "#303030"
+                            width: parent.width - 16
+
+                            Rectangle {
+                                height: parent.height - 30
+                                radius: 3
+                                color: (typeof systemService !== "undefined" && systemService && systemService.cpuPercent > 90) ? "#EF4444" : "#F59E0B"
+                                width: Math.max(0, Math.min(100, (typeof systemService !== "undefined" && systemService) ? systemService.cpuPercent : 0)) / 100 * parent.width
+
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: 300
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: Math.round((typeof systemService !== "undefined" && systemService) ? systemService.cpuPercent : 0) + "%"
+                            color: "#FFFFFF"
+                            font.pixelSize: 11
+                            font.bold: true
+                            horizontalAlignment: Text.AlignRight
+                        }
+
+                        Text {
+                            text: "RAM"
+                            color: "#888888"
+                            font.pixelSize: 9
+                            font.letterSpacing: 0.5
+                            anchors.topMargin: 8
+                        }
+
+                        Rectangle {
+                            id: ramTrack
+                            height: 6
+                            radius: 3
+                            color: "#303030"
+                            width: parent.width - 16
+
+                            Rectangle {
+                                height: parent.height - 30
+                                radius: 3
+                                color: (typeof systemService !== "undefined" && systemService && systemService.memoryPercent > 90) ? "#EF4444" : "#F59E0B"
+                                width: Math.max(0, Math.min(100, (typeof systemService !== "undefined" && systemService) ? systemService.memoryPercent : 0)) / 100 * parent.width
+
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: 300
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: Math.round((typeof systemService !== "undefined" && systemService) ? systemService.memoryPercent : 0) + "%"
+                            color: "#FFFFFF"
+                            font.pixelSize: 11
+                            font.bold: true
+                            horizontalAlignment: Text.AlignRight
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: mediaCardArea
+                    width: parent.height - 24
+                    height: parent.height - 24
+                    radius: 12
+                    color: "#222222"
+                    clip: true
+
+                    Row {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 12
+
+                        Rectangle {
+                            id: artworkContainer
+                            width: 48
+                            height: 48
+                            radius: 8
+                            color: "#2A2A2A"
+                            clip: true
+
+                            Image {
+                                id: artworkImage
+                                anchors.fill: parent
+                                source: (typeof mediaController !== "undefined" && mediaController && mediaController.hasArtwork) ? mediaController.artwork : ""
+                                fillMode: Image.PreserveAspectCrop
+                                visible: mediaController.hasArtwork && mediaController.artwork !== ""
+                            }
+
+                            Text {
+                                anchors.centerIn: artworkContainer
+                                text: "\u266B"
+                                color: "#666666"
+                                font.pixelSize: 18
+                                visible: !artworkImage.visible
+                            }
+                        }
+
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 3
+
+                            Text {
+                                text: (typeof mediaController !== "undefined" && mediaController && mediaController.title !== "") ? mediaController.title : "Unknown Title"
+                                color: "#FFFFFF"
+                                font.pixelSize: 12
+                                font.bold: true
+                                elide: Text.ElideRight
+                            }
+
+                            Text {
+                                text: (typeof mediaController !== "undefined" && mediaController && mediaController.artist !== "") ? mediaController.artist : "Unknown Artist"
+                                color: "#888888"
+                                font.pixelSize: 10
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        Row {
+                            spacing: 5
+
+                            Rectangle {
+                                width: 5
+                                height: 5
+                                radius: 3
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: (typeof mediaController !== "undefined" && mediaController && mediaController.isPlaying) ? "#10B981" : "#6B7280"
+                            }
+
+                            Text {
+                                text: (typeof mediaController !== "undefined" && mediaController && mediaController.playbackStatus !== "") ? mediaController.playbackStatus.toUpperCase() : ""
+                                color: "#666666"
+                                font.pixelSize: 8
+                                font.bold: true
+                                font.letterSpacing: 0.8
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Component {
+        id: mediaPage
+        Item {
+            anchors.fill: parent
+
+            Row {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 40
+                spacing: 8
+
+                Text {
+                    text: "Now Playing"
+                    color: "#FFFFFF"
+                    font.pixelSize: 14
+                    font.bold: true
+                }
+
+                Rectangle {
+                    width: 28
+                    height: 28
+                    radius: 14
+                    color: "#282828"
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: { onBackPressed() }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "\u23EC"
+                            color: "#CCCCCC"
+                            font.pixelSize: 12
+                        }
+                    }
+                }
+            }
+
+            Row {
+                anchors.top: header.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.topMargin: 12
+                spacing: 12
+
+                Rectangle {
+                    id: artworkContainer
+                    width: 64
+                    height: 64
+                    radius: 10
+                    color: "#2A2A2A"
+                    clip: true
+
+                    Image {
+                        id: artworkImage
+                        anchors.fill: parent
+                        source: mediaController.artwork
+                        fillMode: Image.PreserveAspectCrop
+                        visible: mediaController.hasArtwork && mediaController.artwork !== ""
+                    }
+
+                    Text {
+                        anchors.centerIn: artworkContainer
+                        text: "\u266B"
+                        color: "#666666"
+                        font.pixelSize: 22
+                        visible: !artworkImage.visible
+                    }
+                }
+
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - 58 - 100 - 24
+                    spacing: 3
+
+                    Text {
+                        text: mediaController.title !== "" ? mediaController.title : "Unknown Title"
+                        color: "#FFFFFF"
+                        font.pixelSize: 12
+                        font.bold: true
+                        elide: Text.ElideRight
+                    }
+
+                    Text {
+                        text: mediaController.artist !== "" ? mediaController.artist : "Unknown Artist"
+                        color: "#888888"
+                        font.pixelSize: 10
+                        elide: Text.ElideRight
+                    }
+                }
+            }
+
+            Rectangle {
+                id: playbackControls
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 44
+                color: "#171717"
+                radius: 12
+                clip: true
+
+                Row {
+                    anchors.fill: parent
+                    anchors.leftMargin: 12
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 8
+
+                    Rectangle {
+                        width: 28
+                        height: 28
+                        radius: 14
+                        color: "#282828"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "\u23EE"
+                            color: "#CCCCCC"
+                            font.pixelSize: 12
+                        }
+                    }
+
+                    Rectangle {
+                        width: 32
+                        height: 32
+                        radius: 16
+                        color: mediaController.isPlaying ? "#404040" : "#303030"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: mediaController.isPlaying ? "\u23F8" : "\u25B6"
+                            color: "#FFFFFF"
+                            font.pixelSize: 12
+                        }
+                    }
+
+                    Rectangle {
+                        width: 28
+                        height: 28
+                        radius: 14
+                        color: "#282828"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "\u23ED"
+                            color: "#CCCCCC"
+                            font.pixelSize: 12
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Component {
+        id: systemPage
+        Item {
+            anchors.fill: parent
+
+            Row {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 40
+                spacing: 8
+
+                Text {
+                    text: "System Status"
+                    color: "#FFFFFF"
+                    font.pixelSize: 14
+                    font.bold: true
+                }
+
+Rectangle {
+                    width: 28
+                    height: 28
+                    radius: 14
+                    color: "#282828"
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: { onBackPressed() }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "\u23EC"
+                            color: "#CCCCCC"
+                            font.pixelSize: 12
+                        }
+                    }
+                }
+            }
+        }
+
+        Row {
+                anchors.top: header.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.topMargin: 12
+                spacing: 20
+
+                Rectangle {
+                    id: cpuCard
+                    width: (parent.width - 40) / 2
+                    height: 80
+                    radius: 12
+                    color: "#222222"
+                    clip: true
+
+                    Column {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        anchors.topMargin: 12
+                        anchors.bottomMargin: 12
+                        spacing: 6
+
+                        Text {
+                            text: "CPU"
+                            color: "#888888"
+                            font.pixelSize: 9
+                            font.letterSpacing: 0.5
+                        }
+
+                        Rectangle {
+                            id: cpuTrack
+                            height: 6
+                            radius: 3
+                            color: "#303030"
+                            width: parent.width - 24
+
+                            Rectangle {
+                                height: parent.height - 30
+                                radius: 3
+                                color: (typeof systemService !== "undefined" && systemService && systemService.cpuPercent > 90) ? "#EF4444" : "#F59E0B"
+                                width: Math.max(0, Math.min(100, (typeof systemService !== "undefined" && systemService) ? systemService.cpuPercent : 0)) / 100 * parent.width
+
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: 300
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: Math.round((typeof systemService !== "undefined" && systemService) ? systemService.cpuPercent : 0) + "%"
+                            color: "#FFFFFF"
+                            font.pixelSize: 11
+                            font.bold: true
+                            horizontalAlignment: Text.AlignRight
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: ramCard
+                    width: (parent.width - 40) / 2
+                    height: 80
+                    radius: 12
+                    color: "#222222"
+                    clip: true
+
+                    Column {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        anchors.topMargin: 12
+                        anchors.bottomMargin: 12
+                        spacing: 6
+
+                        Text {
+                            text: "RAM"
+                            color: "#888888"
+                            font.pixelSize: 9
+                            font.letterSpacing: 0.5
+                        }
+
+                        Rectangle {
+                            id: ramTrack
+                            height: 6
+                            radius: 3
+                            color: "#303030"
+                            width: parent.width - 24
+
+                            Rectangle {
+                                height: parent.height - 30
+                                radius: 3
+                                color: (typeof systemService !== "undefined" && systemService && systemService.memoryPercent > 90) ? "#EF4444" : "#F59E0B"
+                                width: Math.max(0, Math.min(100, (typeof systemService !== "undefined" && systemService) ? systemService.memoryPercent : 0)) / 100 * parent.width
+
+                                Behavior on width {
+                                    NumberAnimation {
+                                        duration: 300
+                                        easing.type: Easing.OutCubic
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: Math.round((typeof systemService !== "undefined" && systemService) ? systemService.memoryPercent : 0) + "%"
+                            color: "#FFFFFF"
+                            font.pixelSize: 11
+                            font.bold: true
+                            horizontalAlignment: Text.AlignRight
+                        }
+                    }
+                }
+            }
+
+            Row {
+                anchors.top: metricsRow.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.topMargin: 12
+
+                Text {
+                    text: "Kernel " + Qt.application.version
+                    color: "#888888"
+                    font.pixelSize: 10
+                }
+            }
+        }
+    }
+    }
+
+    // Capsule component
+    Capsule {
+        id: capsule
+
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        targetWindow: mainWindow
+    }
+
+    // Page navigation loader
+    Loader {
+        id: pageLoader
+        anchors.fill: parent
+        anchors.topMargin: compactHeight
+        sourceComponent: pageComponents[currentPage]
+    }
+
+    // Page navigation
+    function navigateTo(pageId) {
+        currentPage = pageId
+}
+
+property var pageComponents: [homePage, mediaPage, systemPage, toolsPage]
