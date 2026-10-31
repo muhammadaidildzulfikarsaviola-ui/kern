@@ -1,92 +1,64 @@
-
 import QtQuick
 
 Item {
     id: root
 
     property bool expanded: false
+    property var targetWindow: null
 
-    property var targetWindow
-
-    property point dragOffset: Qt.point(0, 0)
-
-    width: 440
-    height: 220
+    width: parent ? parent.width : 460
+    height: 48
 
     Rectangle {
         id: capsuleBackground
-
-        anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-
+        anchors.top: parent.top
         width: root.expanded ? 420 : 180
-        height: root.expanded ? 210 : 48
-
+        height: 48
         radius: 24
         color: "#171717"
-
         border.width: 1
         border.color: "#303030"
 
         Behavior on width {
             NumberAnimation {
-                duration: 300
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        Behavior on height {
-            NumberAnimation {
-                duration: 300
+                duration: 280
                 easing.type: Easing.OutCubic
             }
         }
 
         Row {
-            id: header
-
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-
-            height: 48
-            anchors.leftMargin: 18
+            anchors.fill: parent
+            anchors.leftMargin: 20
             anchors.rightMargin: 18
-
             spacing: 8
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-
                 text: "KERN"
                 color: "#FFFFFF"
-
                 font.pixelSize: 15
                 font.bold: true
                 font.letterSpacing: 1.5
             }
 
             Item {
-                width: root.expanded ? 250 : 15
+                width: Math.max(0, parent.width - 150)
                 height: 1
             }
 
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
-
                 width: 7
                 height: 7
                 radius: 4
-
                 color: "#F59E0B"
             }
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
-
                 text: root.expanded ? "ACTIVE" : "READY"
                 color: "#999999"
-
                 font.pixelSize: 9
                 font.letterSpacing: 1
             }
@@ -94,37 +66,27 @@ Item {
 
         MouseArea {
             id: dragArea
-
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-
-            height: 48
-
+            anchors.fill: parent
             acceptedButtons: Qt.LeftButton
-            hoverEnabled: true
+            cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
 
             property point pressGlobalPosition: Qt.point(0, 0)
+            property point windowStartPosition: Qt.point(0, 0)
             property bool dragged: false
 
             onPressed: function(mouse) {
-                var globalPosition = mapToGlobal(mouse.x, mouse.y)
-
-                root.dragOffset = Qt.point(
-                    globalPosition.x - root.targetWindow.x,
-                    globalPosition.y - root.targetWindow.y
-                )
-
-                pressGlobalPosition = globalPosition
+                pressGlobalPosition = mapToGlobal(mouse.x, mouse.y)
+                if (root.targetWindow) {
+                    windowStartPosition = Qt.point(root.targetWindow.x, root.targetWindow.y)
+                }
                 dragged = false
             }
 
             onPositionChanged: function(mouse) {
-                if (!pressed)
+                if (!pressed || !root.targetWindow)
                     return
 
                 var globalPosition = mapToGlobal(mouse.x, mouse.y)
-
                 var deltaX = globalPosition.x - pressGlobalPosition.x
                 var deltaY = globalPosition.y - pressGlobalPosition.y
 
@@ -132,93 +94,14 @@ Item {
                     dragged = true
 
                 if (dragged) {
-                    root.targetWindow.x =
-                        globalPosition.x - root.dragOffset.x
-
-                    root.targetWindow.y =
-                        globalPosition.y - root.dragOffset.y
+                    root.targetWindow.x = windowStartPosition.x + deltaX
+                    root.targetWindow.y = windowStartPosition.y + deltaY
                 }
             }
 
             onClicked: {
                 if (!dragged)
                     root.expanded = !root.expanded
-            }
-
-            cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-        }
-
-        Column {
-            anchors.top: header.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-
-            anchors.leftMargin: 20
-            anchors.rightMargin: 20
-            anchors.topMargin: 8
-
-            spacing: 12
-
-            opacity: root.expanded ? 1 : 0
-            visible: root.expanded
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 200
-                }
-            }
-
-            Rectangle {
-                width: parent.width
-                height: 1
-                color: "#303030"
-            }
-
-            Text {
-                text: "Welcome to KERN"
-                color: "#FFFFFF"
-
-                font.pixelSize: 18
-                font.bold: true
-            }
-
-            Text {
-                text: "Your desktop control center."
-                color: "#888888"
-
-                font.pixelSize: 12
-            }
-
-            Rectangle {
-                width: parent.width
-                height: 70
-
-                radius: 12
-                color: "#222222"
-
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 5
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-
-                        text: "SYSTEM STATUS"
-                        color: "#888888"
-
-                        font.pixelSize: 9
-                        font.letterSpacing: 1
-                    }
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-
-                        text: "All systems operational"
-                        color: "#FFFFFF"
-
-                        font.pixelSize: 13
-                    }
-                }
             }
         }
     }
