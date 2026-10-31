@@ -1,166 +1,154 @@
 import QtQuick
-import QtQuick.Window
 
 Item {
     id: mediaPage
+    property var mediaController: null
+    signal backRequested()
 
-    property var mediaController
-
-    width: parent.width
-    height: parent.height
-
-    // Header bar
-    Row {
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 44
-        spacing: 8
-
-        Text {
-            text: "Now Playing"
-            color: "#FFFFFF"
-            font.pixelSize: 14
-            font.bold: true
-        }
-
-        Rectangle {
-            width: 28
-            height: 28
-            radius: 14
-            color: "#282828"
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: { onBackPressed() }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "\u23EC"
-                    color: "#CCCCCC"
-                    font.pixelSize: 12
-                }
-            }
-        }
-    }
-
-    // Artwork and metadata
-    Row {
-        anchors.top: header.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.topMargin: 12
-        spacing: 12
-
-        // Artwork
-        Rectangle {
-            id: artworkContainer
-            width: 64
-            height: 64
-            radius: 10
-            color: "#2A2A2A"
-            clip: true
-
-            Image {
-                id: artworkImage
-                anchors.fill: parent
-                source: mediaController.artwork
-                fillMode: Image.PreserveAspectCrop
-                visible: mediaController.hasArtwork && mediaController.artwork !== ""
-            }
-
-            Text {
-                anchors.centerIn: artworkContainer
-                text: "\u266B"
-                color: "#666666"
-                font.pixelSize: 22
-                visible: !artworkImage.visible
-            }
-        }
-
-        // Metadata column
-        Column {
-            anchors.verticalCenter: parent.verticalCenter
-            width: parent.width - 70
-            spacing: 3
-
-            Text {
-                text: mediaController.title !== "" ? mediaController.title : "Unknown Title"
-                color: "#FFFFFF"
-                font.pixelSize: 12
-                font.bold: true
-                elide: Text.ElideRight
-            }
-
-            Text {
-                text: mediaController.artist !== "" ? mediaController.artist : "Unknown Artist"
-                color: "#888888"
-                font.pixelSize: 10
-                elide: Text.ElideRight
-            }
-        }
-    }
-
-    // Playback controls at bottom
     Rectangle {
-        id: playbackControls
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 44
+        anchors.fill: parent
+        radius: 14
         color: "#171717"
-        radius: 12
-        clip: true
+        border.color: "#2B2B2B"
 
-        Row {
+        Column {
             anchors.fill: parent
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 8
+            anchors.margins: 16
+            spacing: 12
 
-            // Previous
-            Rectangle {
-                width: 28
+            Row {
+                width: parent.width
                 height: 28
-                radius: 14
-                color: "#282828"
 
                 Text {
-                    anchors.centerIn: parent
-                    text: "\u23EE"
-                    color: "#CCCCCC"
-                    font.pixelSize: 12
+                    text: "NOW PLAYING"
+                    color: "#F59E0B"
+                    font.pixelSize: 10
+                    font.bold: true
+                    font.letterSpacing: 1
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Item { width: 1; height: 1 }
+
+                Text {
+                    text: "BACK  ‹"
+                    color: "#BBBBBB"
+                    font.pixelSize: 10
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    MouseArea {
+                        anchors.fill: parent
+                        anchors.margins: -8
+                        onClicked: mediaPage.backRequested()
+                        cursorShape: Qt.PointingHandCursor
+                    }
                 }
             }
 
-            // Play/Pause
-            Rectangle {
-                width: 32
-                height: 32
-                radius: 16
-                color: mediaController.isPlaying ? "#404040" : "#303030"
+            Row {
+                width: parent.width
+                spacing: 14
 
-                Text {
-                    anchors.centerIn: parent
-                    text: mediaController.isPlaying ? "\u23F8" : "\u25B6"
-                    color: "#FFFFFF"
-                    font.pixelSize: 12
+                Rectangle {
+                    width: 112
+                    height: 112
+                    radius: 12
+                    color: "#2A2A2A"
+                    clip: true
+
+                    Image {
+                        anchors.fill: parent
+                        source: mediaPage.mediaController && mediaPage.mediaController.hasArtwork ? mediaPage.mediaController.artwork : ""
+                        fillMode: Image.PreserveAspectCrop
+                        visible: mediaPage.mediaController && mediaPage.mediaController.hasArtwork
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "♫"
+                        color: "#777777"
+                        font.pixelSize: 36
+                        visible: !(mediaPage.mediaController && mediaPage.mediaController.hasArtwork)
+                    }
+                }
+
+                Column {
+                    width: parent.width - 126
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 7
+
+                    Text {
+                        width: parent.width
+                        text: mediaPage.mediaController && mediaPage.mediaController.title !== "" ? mediaPage.mediaController.title : "Nothing playing"
+                        color: "#FFFFFF"
+                        font.pixelSize: 15
+                        font.bold: true
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Text {
+                        width: parent.width
+                        text: mediaPage.mediaController && mediaPage.mediaController.artist !== "" ? mediaPage.mediaController.artist : "No active media session"
+                        color: "#999999"
+                        font.pixelSize: 11
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Text {
+                        text: mediaPage.mediaController ? mediaPage.mediaController.playbackStatus.toUpperCase() : "UNAVAILABLE"
+                        color: "#F59E0B"
+                        font.pixelSize: 9
+                        font.letterSpacing: 0.8
+                    }
                 }
             }
 
-            // Next
-            Rectangle {
-                width: 28
-                height: 28
-                radius: 14
-                color: "#282828"
+            Item { width: 1; height: 1 }
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "\u23ED"
-                    color: "#CCCCCC"
-                    font.pixelSize: 12
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 18
+
+                Repeater {
+                    model: [
+                        { label: "PREV", action: 0 },
+                        { label: "PLAY", action: 1 },
+                        { label: "NEXT", action: 2 }
+                    ]
+
+                    delegate: Rectangle {
+                        required property var modelData
+                        width: modelData.action === 1 ? 54 : 46
+                        height: modelData.action === 1 ? 54 : 46
+                        radius: width / 2
+                        color: modelData.action === 1 ? "#F59E0B" : "#303030"
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: modelData.label
+                            color: modelData.action === 1 ? "#171717" : "#FFFFFF"
+                            font.pixelSize: 9
+                            font.bold: true
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            enabled: !!mediaPage.mediaController
+                            onClicked: {
+                                if (!mediaPage.mediaController)
+                                    return
+                                if (modelData.action === 0)
+                                    mediaPage.mediaController.previous()
+                                else if (modelData.action === 1)
+                                    mediaPage.mediaController.playPause()
+                                else
+                                    mediaPage.mediaController.next()
+                            }
+                            cursorShape: Qt.PointingHandCursor
+                        }
+                    }
                 }
             }
         }
