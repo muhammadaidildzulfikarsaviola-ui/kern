@@ -11,6 +11,7 @@ Item {
 
     Rectangle {
         id: pill
+        visible: !root.expanded
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         width: 190
