@@ -6,103 +6,67 @@ Item {
     property bool expanded: false
     property var targetWindow: null
 
-    width: parent ? parent.width : 460
-    height: 48
+    width: parent ? parent.width : 560
+    height: 40
 
     Rectangle {
-        id: capsuleBackground
+        id: pill
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        width: root.expanded ? 420 : 180
-        height: 48
-        radius: 24
-        color: "#171717"
-        border.width: 1
-        border.color: "#303030"
+        width: 190
+        height: 40
+        radius: 20
+        color: "#050505"
 
-        Behavior on width {
-            NumberAnimation {
-                duration: 280
-                easing.type: Easing.OutCubic
+        Row {
+            anchors.centerIn: parent
+            spacing: 10
+
+            Rectangle {
+                width: 22
+                height: 22
+                radius: 11
+                color: "#00E676"
+                anchors.verticalCenter: parent.verticalCenter
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "ϟ"
+                    color: "#07130B"
+                    font.pixelSize: 16
+                    font.bold: true
+                }
+            }
+
+            Text {
+                id: clock
+                anchors.verticalCenter: parent.verticalCenter
+                text: Qt.formatDateTime(new Date(), "hh:mm")
+                color: "#FFFFFF"
+                font.pixelSize: 18
+                font.bold: true
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "▮▮▮"
+                color: "#FFFFFF"
+                font.pixelSize: 12
+                font.bold: true
             }
         }
 
-        Row {
-            anchors.fill: parent
-            anchors.leftMargin: 20
-            anchors.rightMargin: 18
-            spacing: 8
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "KERN"
-                color: "#FFFFFF"
-                font.pixelSize: 15
-                font.bold: true
-                font.letterSpacing: 1.5
-            }
-
-            Item {
-                width: Math.max(0, parent.width - 150)
-                height: 1
-            }
-
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 7
-                height: 7
-                radius: 4
-                color: "#F59E0B"
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: root.expanded ? "ACTIVE" : "READY"
-                color: "#999999"
-                font.pixelSize: 9
-                font.letterSpacing: 1
-            }
+        Timer {
+            interval: 1000
+            running: !root.expanded
+            repeat: true
+            onTriggered: clock.text = Qt.formatDateTime(new Date(), "hh:mm")
         }
 
         MouseArea {
-            id: dragArea
             anchors.fill: parent
-            acceptedButtons: Qt.LeftButton
-            cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-
-            property point pressGlobalPosition: Qt.point(0, 0)
-            property point windowStartPosition: Qt.point(0, 0)
-            property bool dragged: false
-
-            onPressed: function(mouse) {
-                pressGlobalPosition = mapToGlobal(mouse.x, mouse.y)
-                if (root.targetWindow) {
-                    windowStartPosition = Qt.point(root.targetWindow.x, root.targetWindow.y)
-                }
-                dragged = false
-            }
-
-            onPositionChanged: function(mouse) {
-                if (!pressed || !root.targetWindow)
-                    return
-
-                var globalPosition = mapToGlobal(mouse.x, mouse.y)
-                var deltaX = globalPosition.x - pressGlobalPosition.x
-                var deltaY = globalPosition.y - pressGlobalPosition.y
-
-                if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4)
-                    dragged = true
-
-                if (dragged) {
-                    root.targetWindow.x = windowStartPosition.x + deltaX
-                    root.targetWindow.y = windowStartPosition.y + deltaY
-                }
-            }
-
-            onClicked: {
-                if (!dragged)
-                    root.expanded = !root.expanded
-            }
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.expanded = true
         }
     }
 }
