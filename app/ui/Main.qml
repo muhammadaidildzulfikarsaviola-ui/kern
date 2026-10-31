@@ -144,31 +144,6 @@ Window {
             onTriggered: expandedClock.text = Qt.formatDateTime(new Date(), "hh:mm")
         }
 
-        Row {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.leftMargin: 16
-            anchors.rightMargin: 16
-            spacing: 0
-
-            Rectangle {
-                width: 22
-                height: 22
-                radius: 11
-                color: "#454545"
-                opacity: mainWindow.currentPage === 0 ? 0.75 : 1
-                Text { anchors.centerIn: parent; text: "‹"; color: "white"; font.pixelSize: 22 }
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: pages.decrementCurrentIndex()
-                    cursorShape: Qt.PointingHandCursor
-                }
-            }
-
-            Item { width: 1; height: 1 }
-        }
-
         Rectangle {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
