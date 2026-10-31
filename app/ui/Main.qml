@@ -1,41 +1,35 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
+import QtQuick.Layouts
 import "components"
 
 Window {
     id: mainWindow
 
     visible: true
-    width: 460
-    height: capsule.expanded ? 410 : 104
-
+    width: 560
+    height: capsule.expanded ? 176 : 40
+    minimumWidth: 560
+    maximumWidth: 560
     flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
     color: "transparent"
 
     property int currentPage: 0
 
     Behavior on height {
-        NumberAnimation {
-            duration: 280
-            easing.type: Easing.OutCubic
-        }
+        NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
     }
 
     Component.onCompleted: {
         x = Math.round((Screen.width - width) / 2)
-        y = 24
+        y = 0
     }
 
     Shortcut {
         sequence: "Escape"
         context: Qt.WindowShortcut
-        onActivated: {
-            if (currentPage !== 0)
-                currentPage = 0
-            else
-                capsule.expanded = false
-        }
+        onActivated: capsule.expanded = false
     }
 
     Shortcut {
@@ -54,105 +48,192 @@ Window {
     }
 
     Rectangle {
-        id: navBar
-        width: capsule.expanded ? 420 : 190
-        height: 40
-        anchors.top: parent.top
-        anchors.topMargin: 56
-        anchors.horizontalCenter: parent.horizontalCenter
-        radius: 20
-        color: "#202020"
-        border.color: "#303030"
-        border.width: 1
+        id: expandedPanel
+        anchors.fill: parent
+        radius: 30
+        color: "#050505"
+        visible: capsule.expanded
+        opacity: capsule.expanded ? 1 : 0
         clip: true
 
-        Behavior on width {
-            NumberAnimation {
-                duration: 220
-                easing.type: Easing.OutCubic
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 18
+            anchors.rightMargin: 18
+            anchors.topMargin: 9
+            anchors.bottomMargin: 8
+            spacing: 3
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 24
+                spacing: 8
+
+                Rectangle {
+                    width: 22
+                    height: 22
+                    radius: 11
+                    color: "#00E676"
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "ϟ"
+                        color: "#07130B"
+                        font.pixelSize: 16
+                        font.bold: true
+                    }
+                }
+
+                Text {
+                    text: Qt.formatDateTime(new Date(), "ddd dd MMM yyyy")
+                    color: "#E6E6E6"
+                    font.pixelSize: 13
+                }
+
+                Text {
+                    id: expandedClock
+                    text: Qt.formatDateTime(new Date(), "hh:mm")
+                    color: "#FFFFFF"
+                    font.pixelSize: 13
+                    font.bold: true
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Text {
+                    text: "▮▮▮"
+                    color: "#FFFFFF"
+                    font.pixelSize: 12
+                    font.bold: true
+                }
+            }
+
+            SwipeView {
+                id: pages
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                currentIndex: mainWindow.currentPage
+                interactive: true
+                clip: true
+
+                onCurrentIndexChanged: mainWindow.currentPage = currentIndex
+
+                MediaPage {
+                    mediaController: mediaController
+                }
+
+                PomodoroPage {}
+
+                HomePage {
+                    systemService: systemService
+                    mediaController: mediaController
+                }
+
+                SystemPage {
+                    systemService: systemService
+                }
+
+                ToolsPage {}
+            }
+        }
+
+        Timer {
+            interval: 1000
+            running: capsule.expanded
+            repeat: true
+            onTriggered: expandedClock.text = Qt.formatDateTime(new Date(), "hh:mm")
+        }
+
+        Row {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: 16
+            anchors.rightMargin: 16
+            spacing: 0
+
+            Rectangle {
+                width: 22
+                height: 22
+                radius: 11
+                color: "#454545"
+                opacity: mainWindow.currentPage === 0 ? 0.75 : 1
+                Text { anchors.centerIn: parent; text: "‹"; color: "white"; font.pixelSize: 22 }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: pages.decrementCurrentIndex()
+                    cursorShape: Qt.PointingHandCursor
+                }
+            }
+
+            Item { width: 1; height: 1 }
+        }
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: 16
+            width: 22
+            height: 22
+            radius: 11
+            color: "#454545"
+            Text { anchors.centerIn: parent; text: "‹"; color: "white"; font.pixelSize: 22 }
+            MouseArea {
+                anchors.fill: parent
+                onClicked: pages.decrementCurrentIndex()
+                cursorShape: Qt.PointingHandCursor
+            }
+        }
+
+        Rectangle {
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.rightMargin: 16
+            width: 22
+            height: 22
+            radius: 11
+            color: "#454545"
+            Text { anchors.centerIn: parent; text: "›"; color: "white"; font.pixelSize: 22 }
+            MouseArea {
+                anchors.fill: parent
+                onClicked: pages.incrementCurrentIndex()
+                cursorShape: Qt.PointingHandCursor
             }
         }
 
         Row {
-            anchors.centerIn: parent
-            spacing: 8
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 7
+            spacing: 6
 
             Repeater {
-                model: ["HOME", "MEDIA", "SYSTEM", "TOOLS"]
-
+                model: 5
                 delegate: Rectangle {
                     required property int index
-                    required property string modelData
-
-                    width: capsule.expanded ? 92 : 36
-                    height: 32
-                    radius: 16
-                    color: mainWindow.currentPage === index ? "#F59E0B" : "#3A3A3A"
-
-                    Behavior on width {
-                        NumberAnimation { duration: 180 }
-                    }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: capsule.expanded ? modelData : String(index + 1)
-                        color: mainWindow.currentPage === index ? "#171717" : "#FFFFFF"
-                        font.pixelSize: capsule.expanded ? 9 : 12
-                        font.bold: mainWindow.currentPage === index
-                    }
-
+                    width: mainWindow.currentPage === index ? 18 : 5
+                    height: 4
+                    radius: 2
+                    color: mainWindow.currentPage === index ? "#FFFFFF" : "#666666"
+                    Behavior on width { NumberAnimation { duration: 140 } }
                     MouseArea {
                         anchors.fill: parent
+                        anchors.margins: -5
                         onClicked: mainWindow.currentPage = index
-                        cursorShape: Qt.PointingHandCursor
                     }
                 }
             }
         }
-    }
 
-    Loader {
-        id: pageLoader
-        anchors.top: navBar.bottom
-        anchors.topMargin: 12
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.leftMargin: 20
-        anchors.rightMargin: 20
-        anchors.bottomMargin: 12
-        visible: capsule.expanded
-        active: capsule.expanded
-
-        source: {
-            switch (mainWindow.currentPage) {
-            case 1: return "MediaPage.qml"
-            case 2: return "SystemPage.qml"
-            case 3: return "ToolsPage.qml"
-            default: return "HomePage.qml"
+        MouseArea {
+            anchors.fill: parent
+            z: -1
+            onWheel: function(wheel) {
+                if (wheel.angleDelta.y < 0)
+                    pages.incrementCurrentIndex()
+                else if (wheel.angleDelta.y > 0)
+                    pages.decrementCurrentIndex()
             }
-        }
-
-        onLoaded: {
-            if (!item)
-                return
-
-            if (mainWindow.currentPage === 0) {
-                item.systemService = systemService
-                item.mediaController = mediaController
-            } else if (mainWindow.currentPage === 1) {
-                item.mediaController = mediaController
-            } else if (mainWindow.currentPage === 2) {
-                item.systemService = systemService
-            }
-        }
-    }
-
-    Connections {
-        target: pageLoader.item
-
-        function onBackRequested() {
-            mainWindow.currentPage = 0
         }
     }
 }
