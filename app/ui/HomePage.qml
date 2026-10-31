@@ -1,211 +1,188 @@
 import QtQuick
-import QtQuick.Window
 
 Item {
     id: homePage
 
-    property var systemService
-    property var mediaController
+    property var systemService: null
+    property var mediaController: null
 
-    width: parent.width
-    height: parent.height
-
-    // Home content area - occupies the space below the capsule
     Rectangle {
-        id: contentArea
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
+        anchors.fill: parent
+        radius: 14
         color: "#171717"
-        radius: 12
+        border.color: "#2B2B2B"
+        border.width: 1
         clip: true
 
-        Row {
-            id: homeRow
-            anchors.fill: contentArea
-            anchors.leftMargin: 20
-            anchors.rightMargin: 20
-            anchors.topMargin: 12
-            anchors.bottomMargin: 12
-            spacing: 14
+        Column {
+            anchors.fill: parent
+            anchors.margins: 16
+            spacing: 12
 
-            // Calculate card height based on available space
-            // Use capsule height metrics for consistent sizing
-            property int cardHeight: (capsule.expanded ? 200 : 120)
-            property int cardWidth: (capsule.expanded ? 300 : 140)
+            Column {
+                spacing: 3
 
-            // System monitor card
-            Rectangle {
-                id: systemCard
-                width: cardWidth
-                height: cardHeight
-                radius: 12
-                color: "#222222"
-                clip: true
+                Text {
+                    text: "Welcome to KERN"
+                    color: "#FFFFFF"
+                    font.pixelSize: 18
+                    font.bold: true
+                }
 
-                Column {
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
-                    anchors.topMargin: 10
-                    anchors.bottomMargin: 10
-                    spacing: 8
+                Text {
+                    text: "Your desktop control center."
+                    color: "#888888"
+                    font.pixelSize: 11
+                }
+            }
 
-                    Text {
-                        text: "CPU"
-                        color: "#888888"
-                        font.pixelSize: 9
-                        font.letterSpacing: 0.5
-                    }
+            Row {
+                width: parent.width
+                spacing: 12
 
-                    Rectangle {
-                        id: cpuTrack
-                        height: 6
-                        radius: 3
-                        color: "#303030"
-                        width: parent.width - 20
+                Rectangle {
+                    width: (parent.width - 12) / 2
+                    height: 92
+                    radius: 12
+                    color: "#222222"
+                    border.color: "#303030"
+
+                    Column {
+                        anchors.fill: parent
+                        anchors.margins: 12
+                        spacing: 8
+
+                        Text {
+                            text: "CPU"
+                            color: "#888888"
+                            font.pixelSize: 10
+                            font.letterSpacing: 0.6
+                        }
+
+                        Text {
+                            text: Math.round(homePage.systemService ? homePage.systemService.cpuPercent : 0) + "%"
+                            color: "#FFFFFF"
+                            font.pixelSize: 22
+                            font.bold: true
+                        }
 
                         Rectangle {
-                            height: parent.height - 24
+                            width: parent.width
+                            height: 5
                             radius: 3
-                            color: (typeof systemService !== "undefined" && systemService && systemService.cpuPercent > 90) ? "#EF4444" : "#F59E0B"
-                            width: Math.max(0, Math.min(100, (typeof systemService !== "undefined" && systemService) ? systemService.cpuPercent : 0)) / 100 * parent.width
+                            color: "#353535"
 
-                            Behavior on width {
-                                NumberAnimation {
-                                    duration: 300
-                                    easing.type: Easing.OutCubic
+                            Rectangle {
+                                width: parent.width * Math.max(0, Math.min(100, homePage.systemService ? homePage.systemService.cpuPercent : 0)) / 100
+                                height: parent.height
+                                radius: 3
+                                color: "#F59E0B"
+
+                                Behavior on width {
+                                    NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
                                 }
                             }
                         }
                     }
+                }
 
-                    Text {
-                        text: Math.round((typeof systemService !== "undefined" && systemService) ? systemService.cpuPercent : 0) + "%"
-                        color: "#FFFFFF"
-                        font.pixelSize: 11
-                        font.bold: true
-                        anchors AlignRight: true
-                    }
+                Rectangle {
+                    width: (parent.width - 12) / 2
+                    height: 92
+                    radius: 12
+                    color: "#222222"
+                    border.color: "#303030"
 
-                    Text {
-                        text: "RAM"
-                        color: "#888888"
-                        font.pixelSize: 9
-                        font.letterSpacing: 0.5
-                        anchors topMargin: 6
-                    }
+                    Column {
+                        anchors.fill: parent
+                        anchors.margins: 12
+                        spacing: 8
 
-                    Rectangle {
-                        id: ramTrack
-                        height: 6
-                        radius: 3
-                        color: "#303030"
-                        width: parent.width - 20
-
-                        Rectangle {
-                            height: parent.height - 24
-                            radius: 3
-                            color: (typeof systemService !== "undefined" && systemService && systemService.memoryPercent > 90) ? "#EF4444" : "#F59E0B"
-                            width: Math.max(0, Math.min(100, (typeof systemService !== "undefined" && systemService) ? systemService.memoryPercent : 0)) / 100 * parent.width
-
-                            Behavior on width {
-                                NumberAnimation {
-                                    duration: 300
-                                    easing.type: Easing.OutCubic
-                                }
-                            }
+                        Text {
+                            text: "RAM"
+                            color: "#888888"
+                            font.pixelSize: 10
+                            font.letterSpacing: 0.6
                         }
-                    }
 
-                    Text {
-                        text: Math.round((typeof systemService !== "undefined" && systemService) ? systemService.memoryPercent : 0) + "%"
-                        color: "#FFFFFF"
-                        font.pixelSize: 11
-                        font.bold: true
-                        anchors AlignRight: true
+                        Text {
+                            text: Math.round(homePage.systemService ? homePage.systemService.memoryPercent : 0) + "%"
+                            color: "#FFFFFF"
+                            font.pixelSize: 22
+                            font.bold: true
+                        }
+
+                        Text {
+                            text: "Memory usage"
+                            color: "#777777"
+                            font.pixelSize: 9
+                        }
                     }
                 }
             }
 
-            // Media card
             Rectangle {
-                id: mediaCard
-                width: cardWidth
-                height: cardHeight
+                width: parent.width
+                height: Math.max(78, parent.height - 92 - 12 - 12 - 38)
                 radius: 12
                 color: "#222222"
+                border.color: "#303030"
                 clip: true
 
                 Row {
                     anchors.fill: parent
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 10
+                    anchors.margins: 12
+                    spacing: 12
 
                     Rectangle {
-                        id: artworkContainer
-                        width: 40
-                        height: 40
+                        width: 54
+                        height: 54
                         radius: 8
-                        color: "#2A2A2A"
+                        color: "#303030"
                         clip: true
 
                         Image {
-                            id: artworkImage
                             anchors.fill: parent
-                            source: (typeof mediaController !== "undefined" && mediaController && mediaController.hasArtwork) ? mediaController.artwork : ""
+                            source: homePage.mediaController && homePage.mediaController.hasArtwork ? homePage.mediaController.artwork : ""
                             fillMode: Image.PreserveAspectCrop
-                            visible: mediaController.hasArtwork && mediaController.artwork !== ""
+                            visible: homePage.mediaController && homePage.mediaController.hasArtwork
                         }
 
                         Text {
-                            anchors.centerIn: artworkContainer
-                            text: "\u266B"
-                            color: "#666666"
-                            font.pixelSize: 16
-                            visible: !artworkImage.visible
+                            anchors.centerIn: parent
+                            text: "♫"
+                            color: "#888888"
+                            font.pixelSize: 24
+                            visible: !(homePage.mediaController && homePage.mediaController.hasArtwork)
                         }
                     }
 
                     Column {
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 2
+                        width: parent.width - 66
+                        spacing: 4
 
                         Text {
-                            text: (typeof mediaController !== "undefined" && mediaController && mediaController.title !== "") ? mediaController.title : "Unknown Title"
+                            text: homePage.mediaController && homePage.mediaController.title !== "" ? homePage.mediaController.title : "Nothing playing"
                             color: "#FFFFFF"
-                            font.pixelSize: 11
+                            font.pixelSize: 12
                             font.bold: true
                             elide: Text.ElideRight
+                            width: parent.width
                         }
 
                         Text {
-                            text: (typeof mediaController !== "undefined" && mediaController && mediaController.artist !== "") ? mediaController.artist : "Unknown Artist"
+                            text: homePage.mediaController && homePage.mediaController.artist !== "" ? homePage.mediaController.artist : "Start playing music to see it here"
                             color: "#888888"
-                            font.pixelSize: 9
+                            font.pixelSize: 10
                             elide: Text.ElideRight
-                        }
-                    }
-
-                    Row {
-                        spacing: 3
-
-                        Rectangle {
-                            width: 4
-                            height: 4
-                            radius: 2
-                            anchors.verticalCenter: parent.verticalCenter
-                            color: (typeof mediaController !== "undefined" && mediaController && mediaController.isPlaying) ? "#10B981" : "#6B7280"
+                            width: parent.width
                         }
 
                         Text {
-                            text: (typeof mediaController !== "undefined" && mediaController && mediaController.playbackStatus !== "") ? mediaController.playbackStatus.toUpperCase() : ""
-                            color: "#666666"
-                            font.pixelSize: 7
-                            font.bold: true
+                            text: homePage.mediaController ? homePage.mediaController.playbackStatus.toUpperCase() : "MEDIA"
+                            color: "#F59E0B"
+                            font.pixelSize: 8
                             font.letterSpacing: 0.8
                         }
                     }

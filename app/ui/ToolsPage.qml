@@ -3,35 +3,31 @@ import QtQuick
 Item {
     id: toolsPage
 
-    property var systemService
-    property var mediaController
-
-    width: parent.width
-    height: parent.height
-    color: "#171717"
-
-    Text {
-        anchors.centerIn: parent
-        text: "Tools"
-        color: "#888888"
-        font.pixelSize: 14
-    }
-
     Rectangle {
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 44
-        color: "#2A2A2A"
-        radius: 12
-        clip: true
+        anchors.fill: parent
+        radius: 14
+        color: "#171717"
+        border.color: "#2B2B2B"
 
-        Text {
+        Column {
             anchors.centerIn: parent
-            text: "Placeholder - Clipboard / Pomodoro"
-            color: "#666666"
-            font.pixelSize: 10
-            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 8
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "TOOLS"
+                color: "#F59E0B"
+                font.pixelSize: 11
+                font.bold: true
+                font.letterSpacing: 1
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Productivity modules are coming soon."
+                color: "#888888"
+                font.pixelSize: 11
+            }
         }
     }
 }
